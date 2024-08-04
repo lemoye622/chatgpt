@@ -1,8 +1,19 @@
 import 'dart:js';
+import 'package:chatgpt/models/message.dart';
 import 'package:flutter/material.dart';
 
 class ChatScreen extends StatelessWidget {
-  const ChatScreen({super.key});
+  ChatScreen({super.key});
+
+  final List<Message> messages = [
+    Message(content: "Hello", isUser: true, timestamp: DateTime.now()),
+    Message(content: "How are you?", isUser: false, timestamp: DateTime.now()),
+    Message(
+        content: "Fine,Thank you. And you?",
+        isUser: true,
+        timestamp: DateTime.now()),
+    Message(content: "I am fine.", isUser: false, timestamp: DateTime.now()),
+  ];
 
   @override
   Widget build(BuildContext buildContext) {
@@ -26,13 +37,16 @@ class ChatScreen extends StatelessWidget {
                 itemBuilder: (BuildContext context, int index) {
                   return Row(
                     children: [
-                      const CircleAvatar(
-                        child: Text('A'),
+                      CircleAvatar(
+                        backgroundColor: messages[index].isUser ? Colors.blue : Colors.grey,
+                        child: Text(
+                          messages[index].isUser ? 'A' : 'GPT',
+                        ),
                       ),
                       const SizedBox(
                         width: 8,
                       ),
-                      Text("Message $index"),
+                      Text(messages[index].content),
                     ],
                   );
                 },
@@ -40,7 +54,7 @@ class ChatScreen extends StatelessWidget {
                     const Divider(
                   height: 16,
                 ),
-                itemCount: 100,
+                itemCount: messages.length,
               ),
             ),
             TextField(

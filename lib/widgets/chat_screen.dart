@@ -35,23 +35,9 @@ class ChatScreen extends StatelessWidget {
               // itemCount: 消息数量
               child: ListView.separated(
                 itemBuilder: (BuildContext context, int index) {
-                  return Row(
-                    children: [
-                      CircleAvatar(
-                        backgroundColor: messages[index].isUser ? Colors.blue : Colors.grey,
-                        child: Text(
-                          messages[index].isUser ? 'A' : 'GPT',
-                        ),
-                      ),
-                      const SizedBox(
-                        width: 8,
-                      ),
-                      Text(messages[index].content),
-                    ],
-                  );
+                  return MessageItem(message: messages[index]);
                 },
-                separatorBuilder: (BuildContext context, int index) =>
-                    const Divider(
+                separatorBuilder: (BuildContext context, int index) => const Divider(
                   height: 16,
                 ),
                 itemCount: messages.length,
@@ -70,6 +56,33 @@ class ChatScreen extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class MessageItem extends StatelessWidget {
+  const MessageItem({
+    super.key,
+    required this.message,
+  });
+
+  final Message message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        CircleAvatar( // flutter提供的该组件用来专门处理头像问题，会把子组件直接切成圆形
+          backgroundColor: message.isUser ? Colors.blue : Colors.grey,
+          child: Text(
+            message.isUser ? 'A' : 'GPT',
+          ),
+        ),
+        const SizedBox( // 用来占用一定的空白
+          width: 8,
+        ),
+        Text(message.content),
+      ],
     );
   }
 }

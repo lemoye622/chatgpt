@@ -15,6 +15,8 @@ class ChatScreen extends StatelessWidget {
     Message(content: "I am fine.", isUser: false, timestamp: DateTime.now()),
   ];
 
+  final _textController = TextEditingController();
+
   @override
   Widget build(BuildContext buildContext) {
     return Scaffold(
@@ -44,11 +46,18 @@ class ChatScreen extends StatelessWidget {
               ),
             ),
             TextField(
+              // controller: 编辑框的控制器，通过它可以设置/获取编辑框的内容、选择编辑内容、监听编辑文本改变事件
+              controller: _textController,
               // InputDecoration：用于控制TextField的外观显示，如提示文本、背景颜色、边框等
               decoration: InputDecoration(
                 hintText: 'Type a message',
                 suffixIcon: IconButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    // 处理发送事件
+                    if (_textController.text.isNotEmpty) {
+                      _sendMessage(_textController.text);
+                    }
+                  },
                   icon: const Icon(Icons.send),
                 ),
               ),
@@ -57,6 +66,12 @@ class ChatScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  _sendMessage(String content) {
+    final message = Message(content: content, isUser: true, timestamp: DateTime.now());
+    messages.add(message);
+    _textController.clear();
   }
 }
 

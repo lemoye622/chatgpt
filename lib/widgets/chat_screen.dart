@@ -1,24 +1,19 @@
 import 'dart:js';
 import 'package:chatgpt/models/message.dart';
+import 'package:chatgpt/states/message_state.dart';
 import 'package:flutter/material.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 
-class ChatScreen extends StatelessWidget {
-  ChatScreen({super.key});
-
-  final List<Message> messages = [
-    Message(content: "Hello", isUser: true, timestamp: DateTime.now()),
-    Message(content: "How are you?", isUser: false, timestamp: DateTime.now()),
-    Message(
-        content: "Fine,Thank you. And you?",
-        isUser: true,
-        timestamp: DateTime.now()),
-    Message(content: "I am fine.", isUser: false, timestamp: DateTime.now()),
-  ];
-
+// 如果想要获取 provider 状态，我们需要一个ref，这就需要我们在需要使用状态的地方用 HookConsumerWidget 包裹
+// 修改 ChatScreen ，使其继承自HookConsumerWidge
+// build 函数需要多加一个入参 WidgetRef ref
+class ChatScreen extends HookConsumerWidget {
+  
   final _textController = TextEditingController();
 
   @override
-  Widget build(BuildContext buildContext) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final messages = ref.watch(messageProvider); // 获取数据
     return Scaffold(
       appBar: AppBar(
         title: const Text('Chat'),
@@ -55,7 +50,7 @@ class ChatScreen extends StatelessWidget {
                   onPressed: () {
                     // 处理发送事件
                     if (_textController.text.isNotEmpty) {
-                      _sendMessage(_textController.text);
+                      _sendMessage(ref, _textController.text);
                     }
                   },
                   icon: const Icon(Icons.send),
@@ -68,9 +63,11 @@ class ChatScreen extends StatelessWidget {
     );
   }
 
-  _sendMessage(String content) {
+  _sendMessage(WidgetRef ref, String content) {
     final message = Message(content: content, isUser: true, timestamp: DateTime.now());
-    messages.add(message);
+    // ref.read 来获取 provider 的引用，它不是响应式
+    // 不要在build方法中使用 ref.read
+    ref.read(messageProvider.notifier).addMessage(message); // 添加消息
     _textController.clear();
   }
 }

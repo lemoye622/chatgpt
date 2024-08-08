@@ -1,4 +1,4 @@
-import 'dart:js';
+import 'package:chatgpt/injection.dart';
 import 'package:chatgpt/models/message.dart';
 import 'package:chatgpt/states/message_state.dart';
 import 'package:flutter/material.dart';
@@ -8,7 +8,6 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 // 修改 ChatScreen ，使其继承自HookConsumerWidge
 // build 函数需要多加一个入参 WidgetRef ref
 class ChatScreen extends HookConsumerWidget {
-  
   final _textController = TextEditingController();
 
   @override
@@ -34,7 +33,8 @@ class ChatScreen extends HookConsumerWidget {
                 itemBuilder: (BuildContext context, int index) {
                   return MessageItem(message: messages[index]);
                 },
-                separatorBuilder: (BuildContext context, int index) => const Divider(
+                separatorBuilder: (BuildContext context, int index) =>
+                    const Divider(
                   height: 16,
                 ),
                 itemCount: messages.length,
@@ -64,11 +64,20 @@ class ChatScreen extends HookConsumerWidget {
   }
 
   _sendMessage(WidgetRef ref, String content) {
-    final message = Message(content: content, isUser: true, timestamp: DateTime.now());
+    final message =
+        Message(content: content, isUser: true, timestamp: DateTime.now());
     // ref.read 来获取 provider 的引用，它不是响应式
     // 不要在build方法中使用 ref.read
     ref.read(messageProvider.notifier).addMessage(message); // 添加消息
     _textController.clear();
+    _requestChatGPT(ref, content);
+  }
+
+  _requestChatGPT(WidgetRef ref, String content) async {
+    final res = await chatgpt.sendChat(content);
+    final text = res.choices.first.message?.content ?? '';
+    final message = Message(content: text, isUser: false, timestamp: DateTime.now());
+    ref.read(messageProvider.notifier).addMessage(message);
   }
 }
 
@@ -84,13 +93,15 @@ class MessageItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        CircleAvatar( // flutter提供的该组件用来专门处理头像问题，会把子组件直接切成圆形
+        CircleAvatar(
+          // flutter提供的该组件用来专门处理头像问题，会把子组件直接切成圆形
           backgroundColor: message.isUser ? Colors.blue : Colors.grey,
           child: Text(
             message.isUser ? 'A' : 'GPT',
           ),
         ),
-        const SizedBox( // 用来占用一定的空白
+        const SizedBox(
+          // 用来占用一定的空白
           width: 8,
         ),
         Text(message.content),

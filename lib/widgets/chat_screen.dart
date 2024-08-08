@@ -92,6 +92,8 @@ class MessageItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
+      mainAxisAlignment: MainAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         CircleAvatar(
           // flutter提供的该组件用来专门处理头像问题，会把子组件直接切成圆形
@@ -104,7 +106,14 @@ class MessageItem extends StatelessWidget {
           // 用来占用一定的空白
           width: 8,
         ),
-        Text(message.content),
+        // 要做下文字过长的处理，而 Text 的内容是不会换行的
+        // 改成 Flexible 来处理
+        Flexible(
+          child: Container(
+            margin: const EdgeInsets.only(top: 12),
+            child: Text(message.content),
+          )
+        )
       ],
     );
   }

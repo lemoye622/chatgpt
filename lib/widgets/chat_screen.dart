@@ -1,5 +1,6 @@
 import 'package:chatgpt/injection.dart';
 import 'package:chatgpt/models/message.dart';
+import 'package:chatgpt/states/chat_ui_state.dart';
 import 'package:chatgpt/states/message_state.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -13,6 +14,7 @@ class ChatScreen extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final messages = ref.watch(messageProvider); // 获取数据
+    final chatUIState = ref.watch(chatUiProvider); // 获取网络请求状态
     return Scaffold(
       appBar: AppBar(
         title: const Text('Chat'),
@@ -42,6 +44,7 @@ class ChatScreen extends HookConsumerWidget {
               ),
             ),
             TextField(
+              enabled: !chatUIState.requestLoading,
               // controller: 编辑框的控制器，通过它可以设置/获取编辑框的内容、选择编辑内容、监听编辑文本改变事件
               controller: _textController,
               // InputDecoration：用于控制TextField的外观显示，如提示文本、背景颜色、边框等
@@ -75,7 +78,9 @@ class ChatScreen extends HookConsumerWidget {
   }
 
   _requestChatGPT(WidgetRef ref, String content) async {
+    ref.read(chatUiProvider.notifier).setRequestLoading(true);
     final res = await chatgpt.sendChat(content);
+    ref.read(chatUiProvider.notifier).setRequestLoading(false);
     final text = res.choices.first.message?.content ?? '';
     final message = Message(content: text, isUser: false, timestamp: DateTime.now());
     ref.read(messageProvider.notifier).addMessage(message);

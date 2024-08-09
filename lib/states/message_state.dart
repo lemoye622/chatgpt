@@ -10,6 +10,21 @@ class MessageList extends StateNotifier<List<Message>> {
   void addMessage(Message message) {
     state = [...state, message];
   }
+
+  // 接收SDK传来的部分消息数据
+  // 若是新消息，插入列表最后
+  // 若已存在该id，则将这两部分消息内容合并
+  void upsertMessage(Message partialMessage) {
+    final index = state.indexWhere((element) => element.id == partialMessage.id);
+    if (index == -1) {
+      state = [...state, partialMessage];
+    } else {
+      final msg = state[index];
+      state = [...state]..[index] = partialMessage.copyWith(
+        content: msg.content + partialMessage.content
+      );
+    }
+  }
 }
 
 // 定义 messageProvider，方便在 UI 层读取到我们的状态

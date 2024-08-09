@@ -4,6 +4,7 @@
 import 'package:chatgpt/services/chatgpt_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:logger/logger.dart';
+import 'package:uuid/uuid.dart';
 
 final chatgpt = ChatGPTService();
 
@@ -12,3 +13,5 @@ final chatgpt = ChatGPTService();
 // VERBOSE：用于输出非常详细的调试信息，这些信息在生产中不太需要，但是会暴露我们代码实现的部分细节。这个版本中已弃用，使用 trace 代替
 // INFO：用于输出重要的信息，例如应用程序启动、配置更改等
 final logger = Logger(level: kDebugMode ? Level.trace : Level.info);
+
+const uuid = Uuid();

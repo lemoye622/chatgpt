@@ -68,11 +68,15 @@ class ChatScreen extends HookConsumerWidget {
   }
 
   _sendMessage(WidgetRef ref, String content) {
-    final message =
-        Message(content: content, isUser: true, timestamp: DateTime.now());
+    final message = Message(
+      id: uuid.v4(), 
+      content: content, 
+      isUser: true, 
+      timestamp: DateTime.now(),
+    );
     // ref.read 来获取 provider 的引用，它不是响应式
     // 不要在build方法中使用 ref.read
-    ref.read(messageProvider.notifier).addMessage(message); // 添加消息
+    ref.read(messageProvider.notifier).upsertMessage(message); // 添加消息
     _textController.clear();
     _requestChatGPT(ref, content);
   }
@@ -80,10 +84,19 @@ class ChatScreen extends HookConsumerWidget {
   _requestChatGPT(WidgetRef ref, String content) async {
     ref.read(chatUiProvider.notifier).setRequestLoading(true);
     try {
-      final res = await chatgpt.sendChat(content);
-      final text = res.choices.first.message?.content ?? '';
-      final message = Message(content: text, isUser: false, timestamp: DateTime.now());
-      ref.read(messageProvider.notifier).addMessage(message);
+      final id = uuid.v4();
+      await chatgpt.streamChat(
+        content,
+        onSuccess: (text) {
+          final message = Message(
+            id: id, 
+            content: text,
+            isUser: false,
+            timestamp: DateTime.now(),
+          );
+          ref.read(messageProvider.notifier).upsertMessage(message);
+        },
+      );
     } catch (err) {
       logger.e("requestChatGPT error: $err", error: err);
     } finally {

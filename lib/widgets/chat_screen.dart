@@ -16,6 +16,7 @@ class ChatScreen extends HookConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Chat'),
+        centerTitle: true,
       ),
       body: Padding(
         padding: const EdgeInsets.all(8.0),

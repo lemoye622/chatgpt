@@ -4,16 +4,18 @@ import 'package:chatgpt/states/chat_ui_state.dart';
 import 'package:chatgpt/states/message_state.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 
 // 如果想要获取 provider 状态，我们需要一个ref，这就需要我们在需要使用状态的地方用 HookConsumerWidget 包裹
 // 修改 ChatScreen ，使其继承自HookConsumerWidge
 // build 函数需要多加一个入参 WidgetRef ref
 class ChatScreen extends HookConsumerWidget {
+  ChatScreen({super.key});
+
   final _textController = TextEditingController();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final messages = ref.watch(messageProvider); // 获取数据
     final chatUIState = ref.watch(chatUiProvider); // 获取网络请求状态
     return Scaffold(
       appBar: AppBar(
@@ -27,21 +29,8 @@ class ChatScreen extends HookConsumerWidget {
           children: [
             // Column 里面元素的高度是不做限制的，而 ListView 这种可以滚动的窗口又必须制定高度，这样就导致了报错
             // 我们在 ListView 外增加一个 Expanded 组件即可
-            Expanded(
-              // 这里的ListView.separated是其中一个构造函数，其作用是能够动态地根据列表的数据大小动态生成组件
-              // itemBuilder: 返回列表中每一个消息
-              // separatorBuilder: 是用来返回分割线的，这里是直接使用内置的Divider
-              // itemCount: 消息数量
-              child: ListView.separated(
-                itemBuilder: (BuildContext context, int index) {
-                  return MessageItem(message: messages[index]);
-                },
-                separatorBuilder: (BuildContext context, int index) =>
-                    const Divider(
-                  height: 16,
-                ),
-                itemCount: messages.length,
-              ),
+            const Expanded(
+              child: ChatMessageList(),
             ),
             TextField(
               enabled: !chatUIState.requestLoading,
@@ -139,6 +128,45 @@ class MessageItem extends StatelessWidget {
           )
         )
       ],
+    );
+  }
+}
+
+class ChatMessageList extends HookConsumerWidget {
+  const ChatMessageList({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final messages = ref.watch(messageProvider); // 获取数据
+    // useScrollController 是 Flutter Hooks 中的一个钩子
+    // 这个钩子会创建一个ScrollController并且自动释放，这样我们就不需要自动管理了
+    // ScrollController 用于控制 ListView 的滚动行为
+    final listController = useScrollController();
+
+    // ref.listen 用来监听 messageProvider 的变化。当消息列表发生变化时，它会触发回调函数
+    // 在回调函数中，使用 Future.delayed 延迟 50 毫秒后，listController.jumpTo 会将列表滚动到最底部，确保新消息能够自动显示在视图中
+    ref.listen(messageProvider, (previous, next) {
+      Future.delayed(const Duration(milliseconds: 50), () {
+        listController.jumpTo(
+          listController.position.maxScrollExtent,
+        );
+      });
+    });
+
+    // 这里的ListView.separated是其中一个构造函数，其作用是能够动态地根据列表的数据大小动态生成组件
+    // itemBuilder: 返回列表中每一个消息
+    // separatorBuilder: 是用来返回分割线的，这里是直接使用内置的Divider
+    // itemCount: 消息数量
+    return ListView.separated(
+      controller: listController,
+      itemBuilder: (BuildContext context, int index) {
+        return MessageItem(message: messages[index]);
+      },
+      separatorBuilder: (BuildContext context, int index) =>
+          const Divider(
+        height: 16,
+      ),
+      itemCount: messages.length,
     );
   }
 }

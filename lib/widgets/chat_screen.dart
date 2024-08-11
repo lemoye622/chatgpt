@@ -10,87 +10,29 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 // 修改 ChatScreen ，使其继承自HookConsumerWidge
 // build 函数需要多加一个入参 WidgetRef ref
 class ChatScreen extends HookConsumerWidget {
-  ChatScreen({super.key});
-
-  final _textController = TextEditingController();
+  const ChatScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final chatUIState = ref.watch(chatUiProvider); // 获取网络请求状态
     return Scaffold(
       appBar: AppBar(
         title: const Text('Chat'),
         centerTitle: true,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(8.0),
-        // Column 组建是不具备滚动能力的，我们需要使用 ListView 来创建一个可以滚动的列表，
+      body: const Padding(
+        padding: EdgeInsets.all(8.0),
         child: Column(
           children: [
-            // Column 里面元素的高度是不做限制的，而 ListView 这种可以滚动的窗口又必须制定高度，这样就导致了报错
-            // 我们在 ListView 外增加一个 Expanded 组件即可
-            const Expanded(
+            Expanded(
+              // 聊天消息列表
               child: ChatMessageList(),
             ),
-            TextField(
-              enabled: !chatUIState.requestLoading,
-              // controller: 编辑框的控制器，通过它可以设置/获取编辑框的内容、选择编辑内容、监听编辑文本改变事件
-              controller: _textController,
-              // InputDecoration：用于控制TextField的外观显示，如提示文本、背景颜色、边框等
-              decoration: InputDecoration(
-                hintText: 'Type a message',
-                suffixIcon: IconButton(
-                  onPressed: () {
-                    // 处理发送事件
-                    if (_textController.text.isNotEmpty) {
-                      _sendMessage(ref, _textController.text);
-                    }
-                  },
-                  icon: const Icon(Icons.send),
-                ),
-              ),
-            ),
+            // 输入框
+            UserInputWidget(),
           ],
         ),
       ),
     );
-  }
-
-  _sendMessage(WidgetRef ref, String content) {
-    final message = Message(
-      id: uuid.v4(), 
-      content: content, 
-      isUser: true, 
-      timestamp: DateTime.now(),
-    );
-    // ref.read 来获取 provider 的引用，它不是响应式
-    // 不要在build方法中使用 ref.read
-    ref.read(messageProvider.notifier).upsertMessage(message); // 添加消息
-    _textController.clear();
-    _requestChatGPT(ref, content);
-  }
-
-  _requestChatGPT(WidgetRef ref, String content) async {
-    ref.read(chatUiProvider.notifier).setRequestLoading(true);
-    try {
-      final id = uuid.v4();
-      await chatgpt.streamChat(
-        content,
-        onSuccess: (text) {
-          final message = Message(
-            id: id, 
-            content: text,
-            isUser: false,
-            timestamp: DateTime.now(),
-          );
-          ref.read(messageProvider.notifier).upsertMessage(message);
-        },
-      );
-    } catch (err) {
-      logger.e("requestChatGPT error: $err", error: err);
-    } finally {
-      ref.read(chatUiProvider.notifier).setRequestLoading(false);
-    }
   }
 }
 
@@ -168,5 +110,74 @@ class ChatMessageList extends HookConsumerWidget {
       ),
       itemCount: messages.length,
     );
+  }
+}
+
+class UserInputWidget extends HookConsumerWidget {
+  const UserInputWidget({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final chatUIState = ref.watch(chatUiProvider); // 获取网络请求状态
+    // useTextEditingController 是一个 Flutter Hook
+    // 用来创建和管理 TextEditingController，用于控制文本输入框的内容。
+    final textController = useTextEditingController();
+
+    return TextField(
+      enabled: !chatUIState.requestLoading,
+      // controller: 编辑框的控制器，通过它可以设置/获取编辑框的内容、选择编辑内容、监听编辑文本改变事件
+      controller: textController,
+      // InputDecoration：用于控制TextField的外观显示，如提示文本、背景颜色、边框等
+      decoration: InputDecoration(
+        hintText: 'Type a message',
+        suffixIcon: IconButton(
+          onPressed: () {
+            // 处理发送事件
+            if (textController.text.isNotEmpty) {
+              _sendMessage(ref, textController);
+            }
+          },
+          icon: const Icon(Icons.send),
+        ),
+      ),
+    );
+  }
+
+  _sendMessage(WidgetRef ref, TextEditingController controller) {
+    final content = controller.text;
+    final message = Message(
+      id: uuid.v4(), 
+      content: content, 
+      isUser: true, 
+      timestamp: DateTime.now(),
+    );
+    // ref.read 来获取 provider 的引用，它不是响应式
+    // 不要在build方法中使用 ref.read
+    ref.read(messageProvider.notifier).upsertMessage(message); // 添加消息
+    controller.clear();
+    _requestChatGPT(ref, content);
+  }
+
+  _requestChatGPT(WidgetRef ref, String content) async {
+    ref.read(chatUiProvider.notifier).setRequestLoading(true);
+    try {
+      final id = uuid.v4();
+      await chatgpt.streamChat(
+        content,
+        onSuccess: (text) {
+          final message = Message(
+            id: id, 
+            content: text,
+            isUser: false,
+            timestamp: DateTime.now(),
+          );
+          ref.read(messageProvider.notifier).upsertMessage(message);
+        },
+      );
+    } catch (err) {
+      logger.e("requestChatGPT error: $err", error: err);
+    } finally {
+      ref.read(chatUiProvider.notifier).setRequestLoading(false);
+    }
   }
 }

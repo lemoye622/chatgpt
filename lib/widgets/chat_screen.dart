@@ -5,6 +5,7 @@ import 'package:chatgpt/states/message_state.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:markdown_widget/config/all.dart';
 
 // 如果想要获取 provider 状态，我们需要一个ref，这就需要我们在需要使用状态的地方用 HookConsumerWidget 包裹
 // 修改 ChatScreen ，使其继承自HookConsumerWidge
@@ -65,8 +66,8 @@ class MessageItem extends StatelessWidget {
         // 改成 Flexible 来处理
         Flexible(
           child: Container(
-            margin: const EdgeInsets.only(top: 12),
-            child: Text(message.content),
+            margin: const EdgeInsets.only(right: 48),
+            child: MessageContentWidget(message: message),
           )
         )
       ],
@@ -179,5 +180,22 @@ class UserInputWidget extends HookConsumerWidget {
     } finally {
       ref.read(chatUiProvider.notifier).setRequestLoading(false);
     }
+  }
+}
+
+class MessageContentWidget extends StatelessWidget {
+  const MessageContentWidget({
+    super.key,
+    required this.message,
+  });
+
+  final Message message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: MarkdownGenerator().buildWidgets(message.content),
+    );
   }
 }

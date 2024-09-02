@@ -8,7 +8,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:markdown_widget/config/all.dart';
 
 // 如果想要获取 provider 状态，我们需要一个ref，这就需要我们在需要使用状态的地方用 HookConsumerWidget 包裹
-// 修改 ChatScreen ，使其继承自HookConsumerWidge
+// 修改 ChatScreen ，使其继承自HookConsumerWidget
 // build 函数需要多加一个入参 WidgetRef ref
 class ChatScreen extends HookConsumerWidget {
   const ChatScreen({super.key});
@@ -106,9 +106,9 @@ class ChatMessageList extends HookConsumerWidget {
         return MessageItem(message: messages[index]);
       },
       separatorBuilder: (BuildContext context, int index) =>
-          const Divider(
-        height: 16,
-      ),
+        const Divider(
+          height: 16,
+        ),
       itemCount: messages.length,
     );
   }

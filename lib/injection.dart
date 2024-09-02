@@ -1,6 +1,7 @@
-// 该文件创建的目的在于统一管理各种服务的实例
+// 该文件创建的目的在于统一管理各种服务的实例和定义全局变量
 // 这样在实例变更时会更方便 
 
+import 'package:chatgpt/data/database.dart';
 import 'package:chatgpt/services/chatgpt_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:logger/logger.dart';
@@ -15,3 +16,6 @@ final chatgpt = ChatGPTService();
 final logger = Logger(level: kDebugMode ? Level.trace : Level.info);
 
 const uuid = Uuid();
+
+// 数据库实例
+late AppDatabase db; 
